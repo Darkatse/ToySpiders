@@ -25,12 +25,12 @@ class PSASpider:
         """ 访问登录页面，让用户手动登录，并保存 cookie
         """
         self.driver.get(
-            "http://www.pss-system.gov.cn/sipopublicsearch/portal/uilogin-forwardLogin.shtml"
+            "http://pss-system.cnipa.gov.cn/sipopublicsearch/portal/uilogin-forwardLogin.shtml"
         )
-        time.sleep(20)
+        time.sleep(30)
         pickle.dump(self.driver.get_cookies(), open("cookies.pkl", "wb"))
 
-    def make_query(self, keyword):
+    def make_query(self, keyword, wait_time):
         """ 输入关键字，爬取查询结果
         Args:
             keyword    字符串类型，表示查询关键字
@@ -41,7 +41,7 @@ class PSASpider:
             results    列表类型，其中每个元素都是一个dict，包含相应信息
         """
         self.driver.get(
-            "http://www.pss-system.gov.cn/sipopublicsearch/patentsearch/searchHomeIndex-searchHomeIndex.shtml"
+            "http://pss-system.cnipa.gov.cn/sipopublicsearch/patentsearch/searchHomeIndex-searchHomeIndex.shtml"
         )
         # 装载之前登录后获取的 cookie
         cookies = pickle.load(open("cookies.pkl", "rb"))
@@ -84,11 +84,13 @@ class PSASpider:
             # 将滚动条滚动到窗口最下方
             self.driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight)")
+            time.sleep(wait_time)
             try:
                 self.driver.find_element_by_link_text(u'下一页')
                 WebDriverWait(self.driver, 10).until(
                     EC.element_to_be_clickable(
                         (By.LINK_TEXT, u'下一页'))).click()
+                time.sleep(3)  #等待页面更新
                 WebDriverWait(self.driver, 80).until(
                     EC.visibility_of_element_located(
                         (By.ID, 'search_result_former')))
