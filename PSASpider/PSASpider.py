@@ -8,6 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 class PSASpider:
@@ -75,11 +76,42 @@ class PSASpider:
                     'div.item-header h1').text
                 info_items = p.find_elements_by_css_selector(
                     'div.item-content-body p')
+                check_reference = p.find_element_by_partial_link_text(
+                    '引证：')
                 for item in info_items:
                     info = item.text.split(':', 1)
                     item_name = re.sub(r'\s+', '', info[0])
                     item_value = re.sub(r'\s+', '', info[1])
                     result[item_name] = item_value
+                if check_reference.text != '引证：0':
+                    print(check_reference.text)
+                    actionchains = ActionChains(self.driver)
+                    actionchains.move_to_element(check_reference).perform()
+                    p.find_element_by_link_text(check_reference.text).click()
+                    time.sleep(5)
+                    m = self.driver.find_element_by_class_name('m-pagination-info')
+                    number = m.text.split(" ")
+                    print(number)
+                    for i in range(int(number[-2])//5 + 1):
+                        reference = self.driver.find_element_by_xpath('//*[@id="tableContentLeftId"]')
+                        all_rows = reference.find_elements_by_tag_name("tr")
+                        q = self.driver.find_element_by_class_name('ui-dialog-body')
+                        for row in all_rows:
+                            cells = row.find_elements_by_tag_name("td")
+                            reference_list = []
+                            for n in cells:
+                                reference_list.append(n.text)
+                            result[row.text] = reference_list
+                            print(reference_list)
+                        if i == 1 :break
+                        try:
+                            q.find_element_by_link_text(str(i+2))
+                            WebDriverWait(q, 10).until(
+                                EC.element_to_be_clickable(
+                                (By.LINK_TEXT, str(i+2)))).click()
+                        except (NoSuchElementException, TimeoutException): break
+                        time.sleep(5)
+                    self.driver.find_element_by_class_name('ui-dialog-close').click()
                 results.append(result)
             # 将滚动条滚动到窗口最下方
             self.driver.execute_script(
@@ -91,6 +123,8 @@ class PSASpider:
                     EC.element_to_be_clickable(
                         (By.LINK_TEXT, u'下一页'))).click()
                 time.sleep(3)  #等待页面更新
+                self.driver.execute_script(
+                    "window.scrollTo(0, 0)")
                 WebDriverWait(self.driver, 80).until(
                     EC.visibility_of_element_located(
                         (By.ID, 'search_result_former')))
