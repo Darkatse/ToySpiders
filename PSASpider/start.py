@@ -4,7 +4,7 @@ import io
 import sys
 import json
 
-keywords = ['君实生物', '恒成工具']
+keywords = ['CN101070540A', '君实生物', '恒成工具']
 wait_time = 10
 sp = PSASpider()
 sp.login()

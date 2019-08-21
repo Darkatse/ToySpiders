@@ -78,12 +78,18 @@ class PSASpider:
                     'div.item-content-body p')
                 check_reference = p.find_element_by_partial_link_text(
                     '引证：')
+                check_cite = p.find_element_by_partial_link_text(
+                    '被引：')
                 for item in info_items:
                     info = item.text.split(':', 1)
                     item_name = re.sub(r'\s+', '', info[0])
                     item_value = re.sub(r'\s+', '', info[1])
                     result[item_name] = item_value
+                results.append(result)
                 if check_reference.text != '引证：0':
+                    reference_dict = {}
+                    reference_list = []
+                    reference_dict['引证'] = " "
                     print(check_reference.text)
                     actionchains = ActionChains(self.driver)
                     actionchains.move_to_element(check_reference).perform()
@@ -98,12 +104,11 @@ class PSASpider:
                         q = self.driver.find_element_by_class_name('ui-dialog-body')
                         for row in all_rows:
                             cells = row.find_elements_by_tag_name("td")
-                            reference_list = []
+                            references = []
                             for n in cells:
-                                reference_list.append(n.text)
-                            result[row.text] = reference_list
-                            print(reference_list)
-                        if i == 1 :break
+                                references.append(n.text)
+                            reference_dict[row.text] = references
+                            print(references)
                         try:
                             q.find_element_by_link_text(str(i+2))
                             WebDriverWait(q, 10).until(
@@ -112,7 +117,41 @@ class PSASpider:
                         except (NoSuchElementException, TimeoutException): break
                         time.sleep(5)
                     self.driver.find_element_by_class_name('ui-dialog-close').click()
-                results.append(result)
+                    reference_list.append(reference_dict)
+                    results.append(reference_list)
+                if check_cite.text != '被引：0':
+                    cite_dict = {}
+                    cite_list = []
+                    cite_dict["被引"] = " "
+                    print(check_cite.text)
+                    actionchains = ActionChains(self.driver)
+                    actionchains.move_to_element(check_cite).perform()
+                    p.find_element_by_link_text(check_cite.text).click()
+                    time.sleep(5)
+                    m = self.driver.find_element_by_class_name('m-pagination-info')
+                    number = m.text.split(" ")
+                    print(number)
+                    for i in range(int(number[-2])//5 + 1):
+                        reference = self.driver.find_element_by_id('tableContentId')
+                        all_rows = reference.find_elements_by_tag_name("tr")
+                        q = self.driver.find_element_by_class_name('ui-dialog-body')
+                        for row in all_rows:
+                            cells = row.find_elements_by_tag_name("td")
+                            cites = []
+                            for n in cells:
+                                cites.append(n.text)
+                            cite_dict[row.text] = cites
+                            print(cites)
+                        try:
+                            q.find_element_by_link_text(str(i+2))
+                            WebDriverWait(q, 10).until(
+                                EC.element_to_be_clickable(
+                                (By.LINK_TEXT, str(i+2)))).click()
+                        except (NoSuchElementException, TimeoutException): break
+                        time.sleep(5)
+                    self.driver.find_element_by_class_name('ui-dialog-close').click()
+                    cite_list.append(cite_dict)
+                    results.append(cite_list)
             # 将滚动条滚动到窗口最下方
             self.driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight)")
