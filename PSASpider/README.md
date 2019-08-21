@@ -8,7 +8,7 @@
    
 ## 使用方法
 
-在命令行执行 **python start.py** 即可。start.py 中有一个 keywords 列表，可以自己修改。
+在命令行执行 **python start.py** 即可。start.py 中有一个 keywords 列表，可以自己修改。  
 新增wait_time项为每个页面停留时间，网不好加载不出下一页的话可以尝试增大数值
 
 ## 注意事项
